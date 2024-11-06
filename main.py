@@ -9,14 +9,16 @@ np.random.seed(42)
 LAST_STATE = np.random.get_state()
 
 WINDOW_WIDTH, WINDOW_HEIGHT = 500, 500
-LOW_RES_WIDTH, LOW_RES_HEIGHT = 200, 200
+LOW_RES_WIDTH, LOW_RES_HEIGHT = 100, 100
 WINDOW_SURFACE = pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.RESIZABLE
 
 # BLACK     = (   0,   0,   0 )
 # WHITE     = ( 255, 255, 255 )
 BLACK      = (0, 0, 255)
 WHITE     = (0, 255, 0)
-DARK_BLUE = (   3,   5,  54 )
+WHITE2    = ( 100, 255, 200 )
+# WHITE2    = ( 255,   0,   0 )
+DARK_BLUE = (   0,   0,  200 )
 RED       = ( 255,   0,   0 )
 GREEN     = (0, 255, 0)
 BLUE      = (0, 0, 255)
@@ -27,29 +29,37 @@ pygame.display.set_caption("CA")
 canvas = pygame.Surface( ( LOW_RES_WIDTH, LOW_RES_HEIGHT ) )
 canvas.fill( DARK_BLUE )
 
+
 class CanvasUtils:
     @staticmethod
     def convert_from_array(array : np.ndarray, surface : pygame.Surface):
-        colors = {0 : WHITE, 1 : BLACK, 2 : RED, 3 : GREEN, 4 : BLUE}
+        colors = {0 : BLACK, 1 : WHITE, 2 : WHITE2, 3 : DARK_BLUE, 4 : BLUE}
         for i in range(array.shape[0]):
             for j in range(array.shape[1]):
-                # color = WHITE if array[i][j] == 0 else BLACK
                 color = colors[array[i][j]]
                 surface.set_at((i, j), color)
-    
+
     @staticmethod
-    def _get_neighbors(array, i, j, _range : int = 1, moore : bool = True) -> list:
+    def _get_neighbors(array : np.ndarray, i : int, j : int, _range : int = 1, normalized : bool = False, pattern : str = "") -> list:  
         neighbors = []
-        if moore:
-            dirs = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
-        else:
-            dirs = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-        for r in range(1, _range + 1):
-            for x, y in dirs:
-                if x == 0 and y == 0:
+        for dx in range(-_range, _range + 1):
+            for dy in range(-_range, _range + 1):
+                if dx == 0 and dy == 0:
                     continue
-                ni = (i + (x * r)) % array.shape[0]
-                nj = (j + (y * r)) % array.shape[1]
+                match pattern:
+                    case "interlined":
+                        if (dx + dy) % 2 == 0:
+                            continue
+                    case "cross_fractal":
+                        if (dx % (max([abs(dx), abs(dy)])) != 0 or dy % (max([abs(dx), abs(dy)])) != 0):
+                            continue
+                    case _:
+                        pass
+                ni = (i + (dx)) % array.shape[0]
+                nj = (j + (dy)) % array.shape[1]
+                if normalized:
+                    if np.linalg.norm([dx, dy]) > _range:
+                        continue
                 neighbors.append(array[ni][nj])
         return neighbors
 
@@ -65,6 +75,7 @@ class NoiseGenerator:
         noise = np.random.choice([1, 0], (LOW_RES_WIDTH, LOW_RES_HEIGHT), p=[_density, 1 - _density])
         return noise
 
+
 class CAiterator:
     def __init__(self):
         pass
@@ -79,8 +90,14 @@ class CAiterator:
     def _apply_rule(self, array, i, j):
         _range = 2
         _rule = 8
-        neighbors : list = CanvasUtils._get_neighbors(array, i, j, _range)
-        if sum(neighbors) > _rule:
+        neighbors : list = CanvasUtils._get_neighbors(array, i, j, _range, pattern="cross_fractal")
+        neighbors_2 : list = CanvasUtils._get_neighbors(array, i, j, 3, normalized=True, pattern="interlined")
+        land_ammount : int = len([n for n in neighbors if n != 0])
+        water_ammount = len([n for n in neighbors_2 if n == 0])
+        
+        if water_ammount == len(neighbors_2):
+            return 3
+        if land_ammount > _rule:
             return 1
         return 0
 
@@ -113,6 +130,7 @@ def _start_loop():
     CanvasUtils.convert_from_array(map, canvas)
 
     current_noise_density = 0.5
+    iterations : list[np.ndarray] = []
     current_iteration = 0
     last_state = LAST_STATE
 
