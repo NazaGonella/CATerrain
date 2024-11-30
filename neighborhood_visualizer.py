@@ -34,7 +34,7 @@ def _start_loop():
 
     # map[i_center][j_center] = 4
 
-    neighbors : list = CanvasUtils._get_neighbors_positions(map, i_center, j_center, 7, pattern="interlined", normalized=False)
+    neighbors : list = CanvasUtils._get_neighbors_positions(map, i_center, j_center, 7, pattern="cross_fractal", normalized=False)
     for n in neighbors:
         map[n] = 0
     CanvasUtils.convert_from_array(map, canvas)

@@ -30,7 +30,7 @@ def _start_loop():
     map = NoiseGenerator.generate_noise(LOW_RES_WIDTH, LOW_RES_HEIGHT)
     CanvasUtils.convert_from_array(map, canvas)
 
-    current_rule = 3
+    current_rule = 5
     current_noise_density = 0.5
     current_iteration = 0
     last_state = LAST_STATE
