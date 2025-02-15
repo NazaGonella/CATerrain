@@ -31,14 +31,13 @@ def _start_loop():
 
     last_state = LAST_STATE
 
-    #np.random.seed()
+    np.random.seed()
 
     map, map_snapshots = _generate_map()
     curr_snapshot : int = 0
 
     #start_time = time.perf_counter()
     biome_detector : BiomeDetector = BiomeDetector(map)
-    biome_detector.are_biomes_colliding(TerrainType.B, TerrainType.R)
     #print(time.perf_counter() - start_time)
 
     while running:
@@ -47,7 +46,6 @@ def _start_loop():
                 last_state = LAST_STATE
                 map, map_snapshots = _generate_map()
                 biome_detector = BiomeDetector(map)
-                biome_detector.are_biomes_colliding(TerrainType.B, TerrainType.R)
                 curr_snapshot = 0
             
             if ( event.type == pygame.QUIT ):
@@ -86,14 +84,20 @@ def _generate_map() -> np.ndarray:
         map = ca_iterator.iterate(current_rule, map)
     _create_border(map, BORDER_SIZE)
 
+    clean_map = map.copy()
 
-    voronoi_density : float = 0.003
-    voronoi : VoronoiSimulation = VoronoiSimulation(map)
-    voronoi.add_seeds(base_terrain_type=TerrainType.GRASS, biome_distribution=[1, 3, 1])
-    voronoi.organic_tessellate(base_terrain_type=TerrainType.GRASS)
-    voronoi.hard_tessellate(base_terrain_type=TerrainType.GRASS)
-    map = voronoi.get_map_with_points()
-    snapshots = voronoi.get_map_snapshots()
+    for _ in range(100):
+        map = clean_map.copy()
+        voronoi_density : float = 0.003
+        voronoi : VoronoiSimulation = VoronoiSimulation(map)
+        voronoi.add_seeds(base_terrain_type=TerrainType.GRASS, biome_distribution=[1, 3, 1])
+        voronoi.organic_tessellate(base_terrain_type=TerrainType.GRASS)
+        voronoi.hard_tessellate(base_terrain_type=TerrainType.GRASS)
+        map = voronoi.get_map_with_points()
+        snapshots = voronoi.get_map_snapshots()
+        biome_detector : BiomeDetector = BiomeDetector(map)
+        if not biome_detector.are_biomes_colliding(TerrainType.R, TerrainType.B):
+            break
     return map, snapshots
 
 _start_loop()

@@ -6,6 +6,7 @@ from enum import IntEnum
 #WHITE     = (0, 255, 0)
 WATER = (40, 92, 196)
 GRASS = (89, 193, 53)
+JUNGLE = (36, 82, 59)
 WHITE2    = ( 100, 255, 200 )
 DARK_BLUE = (   0,   0,  200 )
 RED       = ( 255,   0,   0 )
@@ -151,7 +152,7 @@ class CanvasUtils:
         return False
 
 class BiomeDetector:
-    
+
     def __init__(self, map : np.ndarray):
         #print(self.biome_points)
         self.map = map.copy()
@@ -194,10 +195,10 @@ class BiomeDetector:
         return self.biomes_neighbors.get(terrain_type, set())
 
     def are_biomes_colliding(self, biome_a : TerrainType, biome_b : TerrainType) -> bool:
-        print("")
+        # print("")
         # print(self.biome_neighbors_type.get(biome_a, set()))
         # print(self.biome_neighbors_type.get(biome_b, set()))
-        print(self.biome_neighbors_type)
+        # print(self.biome_neighbors_type)
         for b in self.biome_neighbors_type.get(biome_a, set()):
             if b == biome_b:
                 return True
