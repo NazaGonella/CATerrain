@@ -42,12 +42,16 @@ class CanvasUtils:
 
     @staticmethod
     def convert_from_array(array : np.ndarray, surface : pygame.Surface):
-        colors = {0 : WATER, 1 : GRASS, 2 : WHITE2, 3 : DARK_BLUE, 4 : BLUE}
         for i in range(array.shape[0]):
             for j in range(array.shape[1]):
                 #color = colors[array[i][j]]
                 color = CanvasUtils.colors_by_terrain_type.get(array[i][j], (255, 255, 255))
                 surface.set_at((i, j), color)
+    
+    @staticmethod
+    def animate_from_array(array_snapshots : list[np.ndarray], surface : pygame.Surface):
+        for snapshot in array_snapshots:
+            CanvasUtils.convert_from_array(snapshot, surface)
 
     @staticmethod
     def _get_neighbors(array : np.ndarray, i : int, j : int, _range : int = 1, normalized : bool = False, pattern : str = "") -> list[TerrainType]:  
@@ -145,3 +149,6 @@ class CanvasUtils:
             if n == terrain_type:
                 return True
         return False
+
+class CanvasAnimator:
+    pass

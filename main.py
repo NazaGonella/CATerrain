@@ -33,6 +33,8 @@ def _start_loop():
     current_iteration = 3
     last_state = LAST_STATE
 
+    np.random.seed()
+
     ca_iterator = CAiterator()
     map = NoiseGenerator.generate_noise(LOW_RES_WIDTH, LOW_RES_HEIGHT, density=current_noise_density)
     _create_border(map, BORDER_SIZE)
@@ -42,11 +44,12 @@ def _start_loop():
 
 
     voronoi_density : float = 0.003
-    voronoi : VoronoiSimulation = VoronoiSimulation(map, voronoi_density)
-    voronoi.add_points(terrain_type=TerrainType.GRASS)
-    voronoi.organic_tessellate_fast(terrain_type=TerrainType.GRASS)
+    voronoi : VoronoiSimulation = VoronoiSimulation(map)
+    voronoi.add_seeds(base_terrain_type=TerrainType.GRASS, biome_distribution=[1, 3, 1])
+    voronoi.organic_tessellate(base_terrain_type=TerrainType.GRASS)
     map = voronoi.get_map_with_points()
-
+    snapshots = voronoi.get_map_snapshots()
+    curr_snapshot = 0
     CanvasUtils.convert_from_array(map, canvas)
 
     while running:
@@ -58,10 +61,12 @@ def _start_loop():
                 for _ in range(current_iteration):
                     map = ca_iterator.iterate(current_rule, map)
                 _create_border(map, BORDER_SIZE)
-                voronoi : VoronoiSimulation = VoronoiSimulation(map, voronoi_density)
-                voronoi.add_points(terrain_type=TerrainType.GRASS)
-                voronoi.organic_tessellate_fast(terrain_type=TerrainType.GRASS)
+                voronoi : VoronoiSimulation = VoronoiSimulation(map)
+                voronoi.add_seeds(base_terrain_type=TerrainType.GRASS, biome_distribution=[1, 3, 1])
+                voronoi.organic_tessellate(base_terrain_type=TerrainType.GRASS)
                 map = voronoi.get_map_with_points()
+                snapshots = voronoi.get_map_snapshots()
+                curr_snapshot = 0
                 CanvasUtils.convert_from_array(map, canvas)
             if ( event.type == pygame.KEYDOWN and event.key == pygame.K_r):
                 print("Reset CA")
@@ -76,11 +81,15 @@ def _start_loop():
             if ( event.type == pygame.QUIT ):
                 running = False
 
+        # if len(snapshots) > curr_snapshot:
+        #     CanvasUtils.convert_from_array(snapshots[curr_snapshot], canvas)
+        #     curr_snapshot += 1
+
         window.blit( pygame.transform.scale(canvas, (WINDOW_WIDTH, WINDOW_HEIGHT)), ( 0, 0 ) )
         pygame.display.flip()
 
         # Clamp FPS
-        clock.tick_busy_loop(60)
+        clock.tick_busy_loop(60 * 100)
 
 def _create_border(map : np.ndarray, border_size : int) -> np.ndarray:
     for i in range(map.shape[0]):
