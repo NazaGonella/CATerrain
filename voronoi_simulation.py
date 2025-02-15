@@ -67,6 +67,7 @@ class VoronoiSimulation:
                         if closest_point[0] == -1 or closest_point[0] >= distance:
                             closest_point = (distance, point[1])
                     new_map[i][j] = closest_point[1]
+                    self.map_snapshots.append(new_map.copy())
         self.map = new_map
 
     def organic_tessellate(self, base_terrain_type : TerrainType) -> None:
@@ -87,7 +88,8 @@ class VoronoiSimulation:
             for biome in biomes:
                 for d in range(biome_distribution[biome]):
                     if len(biomes_uncolored_neighbors[biome]) > 0:
-                        chosen_neighbor : tuple[int, int] = random.choice(list(biomes_uncolored_neighbors[biome]))
+                        # chosen_neighbor : tuple[int, int] = random.choice(list(biomes_uncolored_neighbors[biome]))
+                        chosen_neighbor : tuple[int, int] = list(biomes_uncolored_neighbors[biome])[np.random.randint(0, len(biomes_uncolored_neighbors[biome]))]
                         for n in CanvasUtils._get_neighbors_positions(new_map, chosen_neighbor[0], chosen_neighbor[1], normalized=True):
                             if new_map[n[0]][n[1]] == base_terrain_type:
                                 biomes_uncolored_neighbors[biome].add(n)
