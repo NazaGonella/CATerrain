@@ -2,7 +2,7 @@ import pygame
 import numpy as np
 import time
 
-from utils import CanvasUtils, NoiseGenerator, TerrainType
+from utils import CanvasUtils, NoiseGenerator, TerrainType, BiomeDetector
 from cellular_automata import CAiterator
 from voronoi_simulation import VoronoiSimulation
 
@@ -26,7 +26,7 @@ canvas = pygame.Surface( ( LOW_RES_WIDTH, LOW_RES_HEIGHT ) )
 def _start_loop():
     clock = pygame.time.Clock()
     running = True
-    is_animated = True
+    is_animated = False
     skip_frame : int = 8
 
     last_state = LAST_STATE
@@ -36,11 +36,18 @@ def _start_loop():
     map, map_snapshots = _generate_map()
     curr_snapshot : int = 0
 
+    #start_time = time.perf_counter()
+    biome_detector : BiomeDetector = BiomeDetector(map)
+    biome_detector.are_biomes_colliding(TerrainType.B, TerrainType.R)
+    #print(time.perf_counter() - start_time)
+
     while running:
         for event in pygame.event.get():
             if ( event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE ):
                 last_state = LAST_STATE
                 map, map_snapshots = _generate_map()
+                biome_detector = BiomeDetector(map)
+                biome_detector.are_biomes_colliding(TerrainType.B, TerrainType.R)
                 curr_snapshot = 0
             
             if ( event.type == pygame.QUIT ):
