@@ -1,8 +1,6 @@
-def clear_bits(a, b):
-    return a & ~b
+def get_max_key(d):
+    return max(d, key=d.get)
 
-a = 0b1101  # Representación binaria de 13
-b = 0b1010  # Representación binaria de 10
-
-resultado = clear_bits(a, b)
-print(bin(resultado))  # Output: 0b1001
+# Example usage
+data = {"hello": 4, "bye": 10, "yes": 9}
+print(get_max_key(data))  # Output: "yes"

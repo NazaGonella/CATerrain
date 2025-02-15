@@ -98,6 +98,8 @@ def _generate_map() -> np.ndarray:
         biome_detector : BiomeDetector = BiomeDetector(map)
         if not biome_detector.are_biomes_colliding(TerrainType.R, TerrainType.B):
             break
+    for _ in range(1):
+        map = ca_iterator.iterate(9, map)
     return map, snapshots
 
 _start_loop()
