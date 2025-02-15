@@ -1,4 +1,4 @@
-from utils import CanvasUtils
+from utils import CanvasUtils, TerrainType
 import numpy as np
 
 class CAiterator:
@@ -25,6 +25,12 @@ class Rules:
             return Rules._rule_04(array, i, j)
         elif rule_index == 5:
             return Rules._rule_05(array, i, j)
+        elif rule_index == 6:
+            return Rules._rule_06(array, i, j)
+        elif rule_index == 7:
+            return Rules._rule_07(array, i, j)
+        elif rule_index == 8:
+            return Rules._rule_08(array, i, j)
         return Rules._rule_01(array, i, j)
 
     # bug? considers deep water land
@@ -101,4 +107,36 @@ class Rules:
         if land_ammount > _rule:
             return 1
         return 0
+
+    def _rule_06(array, i, j) -> int:
+        _range = 1
+        _rule = 4
+        neighbors : list = CanvasUtils._get_neighbors(array, i, j, _range)
+        land_ammount : int = len([n for n in neighbors if n != 0 and n != 3])
+        
+        if land_ammount > _rule:
+            return 1
+        return 0
     
+    def _rule_07(array, i, j) -> int:
+        _range = 2
+        _rule = 10
+        neighbors : list = CanvasUtils._get_neighbors(array, i, j, _range)
+        land_ammount : int = len([n for n in neighbors if n != 0 and n != 3])
+        
+        if land_ammount > _rule:
+            return 1
+        return 0
+    
+    def _rule_08(array, i, j) -> int:
+        #_range = 2
+        #_rule = 8
+        # neighbors : list = CanvasUtils._get_neighbors(array, i, j, _range, normalized=True)
+        _range = 2
+        _rule = 9
+        neighbors : list = CanvasUtils._get_neighbors(array, i, j, _range)
+        land_ammount : int = len([n for n in neighbors if n != 0 and n != 3])
+        
+        if land_ammount > _rule:
+            return TerrainType.GRASS
+        return TerrainType.WATER

@@ -2,18 +2,19 @@ import pygame
 import numpy as np
 import time
 
-from utils import CanvasUtils
-from utils import NoiseGenerator
+from utils import CanvasUtils, NoiseGenerator, TerrainType
 from cellular_automata import CAiterator
+from voronoi_simulation import VoronoiSimulation
 
 pygame.init()
 
 SEED = 42
+BORDER_SIZE = 1
 np.random.seed(42)
 LAST_STATE = np.random.get_state()
 
-WINDOW_WIDTH, WINDOW_HEIGHT = 500, 500
-LOW_RES_WIDTH, LOW_RES_HEIGHT = 100, 100
+WINDOW_WIDTH, WINDOW_HEIGHT = 100*10, 60*10
+LOW_RES_WIDTH, LOW_RES_HEIGHT = 100, 60
 WINDOW_SURFACE = pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.RESIZABLE
 
 window = pygame.display.set_mode( ( WINDOW_WIDTH, WINDOW_HEIGHT ), WINDOW_SURFACE )
@@ -27,50 +28,49 @@ def _start_loop():
     clock = pygame.time.Clock()
     running = True
 
-    map = NoiseGenerator.generate_noise(LOW_RES_WIDTH, LOW_RES_HEIGHT)
-    CanvasUtils.convert_from_array(map, canvas)
-
-    current_rule = 5
-    current_noise_density = 0.5
-    current_iteration = 0
+    current_rule = 8
+    current_noise_density = 0.42
+    current_iteration = 3
     last_state = LAST_STATE
 
     ca_iterator = CAiterator()
+    map = NoiseGenerator.generate_noise(LOW_RES_WIDTH, LOW_RES_HEIGHT, density=current_noise_density)
+    _create_border(map, BORDER_SIZE)
+    for _ in range(current_iteration):
+        map = ca_iterator.iterate(current_rule, map)
+    _create_border(map, BORDER_SIZE)
+
+
+    voronoi_density : float = 0.003
+    voronoi : VoronoiSimulation = VoronoiSimulation(map, voronoi_density)
+    voronoi.add_points(terrain_type=TerrainType.GRASS)
+    voronoi.organic_tessellate_fast(terrain_type=TerrainType.GRASS)
+    map = voronoi.get_map_with_points()
+
+    CanvasUtils.convert_from_array(map, canvas)
 
     while running:
         for event in pygame.event.get():
             if ( event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE ):
                 last_state = np.random.get_state()
                 map = NoiseGenerator.generate_noise(LOW_RES_WIDTH, LOW_RES_HEIGHT, density=current_noise_density)
+                _create_border(map, BORDER_SIZE)
                 for _ in range(current_iteration):
                     map = ca_iterator.iterate(current_rule, map)
-                CanvasUtils.convert_from_array(map, canvas)
-            if ( event.type == pygame.KEYDOWN and event.key == pygame.K_UP ):
-                current_noise_density += 0.01
-                print("Current density: ", current_noise_density)
-                np.random.set_state(last_state)
-                map = NoiseGenerator.generate_noise(LOW_RES_WIDTH, LOW_RES_HEIGHT, density=current_noise_density)
-                for _ in range(current_iteration):
-                    map = ca_iterator.iterate(current_rule, map)
-                CanvasUtils.convert_from_array(map, canvas)
-            if ( event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN ):
-                current_noise_density -= 0.01
-                print("Current density: ", current_noise_density)
-                np.random.set_state(last_state)
-                map = NoiseGenerator.generate_noise(LOW_RES_WIDTH, LOW_RES_HEIGHT, density=current_noise_density)
-                for _ in range(current_iteration):
-                    map = ca_iterator.iterate(current_rule, map)
-                CanvasUtils.convert_from_array(map, canvas)
-            if ( event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT):
-                map = ca_iterator.iterate(current_rule, map)
-                current_iteration+=1
-                print("Current Iteration: ", current_iteration)
+                _create_border(map, BORDER_SIZE)
+                voronoi : VoronoiSimulation = VoronoiSimulation(map, voronoi_density)
+                voronoi.add_points(terrain_type=TerrainType.GRASS)
+                voronoi.organic_tessellate_fast(terrain_type=TerrainType.GRASS)
+                map = voronoi.get_map_with_points()
                 CanvasUtils.convert_from_array(map, canvas)
             if ( event.type == pygame.KEYDOWN and event.key == pygame.K_r):
                 print("Reset CA")
                 np.random.set_state(last_state)
                 map = NoiseGenerator.generate_noise(LOW_RES_WIDTH, LOW_RES_HEIGHT, density=current_noise_density)
-                current_iteration = 0
+                _create_border(map, BORDER_SIZE)
+                for _ in range(current_iteration):
+                    map = ca_iterator.iterate(current_rule, map)
+                _create_border(map, BORDER_SIZE)
                 CanvasUtils.convert_from_array(map, canvas)
             
             if ( event.type == pygame.QUIT ):
@@ -81,6 +81,11 @@ def _start_loop():
 
         # Clamp FPS
         clock.tick_busy_loop(60)
+
+def _create_border(map : np.ndarray, border_size : int) -> np.ndarray:
+    for i in range(map.shape[0]):
+        for j in range(map.shape[1]):
+            map[i][j] = TerrainType.WATER if i < border_size or i >= map.shape[0] - border_size or j < border_size or j >= map.shape[1] - border_size else map[i][j]
 
 _start_loop()
 pygame.quit()
