@@ -1,6 +1,7 @@
 import numpy as np
 import random
 from utils import CanvasUtils, TerrainType
+from collections import defaultdict
 
 class VoronoiSimulation:
 
@@ -73,10 +74,7 @@ class VoronoiSimulation:
 
         biomes = {p[1] for p in self.seeds}
         biomes_uncolored_neighbors: dict[TerrainType, set[tuple[int, int]]] = {b : set() for b in biomes}
-        biome_distribution : dict[TerrainType, int] = {}
-
-        for pos, biome in self.seeds:
-            biome_distribution[biome] = 0 
+        biome_distribution : dict[TerrainType, int] = defaultdict(int)
 
         for pos, biome in self.seeds:
             for n in CanvasUtils._get_neighbors_positions(new_map, pos[0], pos[1], normalized=True):
@@ -99,8 +97,14 @@ class VoronoiSimulation:
                         changed_terrain = True
             if changed_terrain == False:
                 break
-        
+        self.map = new_map
 
+    def fill_isles(self, base_terrain_type : TerrainType, fill_terrain_type : TerrainType) -> None:
+        new_map : np.ndarray = self.map.copy()
+        for i in range(new_map.shape[0]):
+            for j in range(new_map.shape[1]):
+                if new_map[i][j] == base_terrain_type:
+                    new_map[i][j] = fill_terrain_type
         self.map = new_map
 
     def get_map_with_points(self) -> np.ndarray:

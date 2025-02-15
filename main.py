@@ -47,6 +47,7 @@ def _start_loop():
     voronoi : VoronoiSimulation = VoronoiSimulation(map)
     voronoi.add_seeds(base_terrain_type=TerrainType.GRASS, biome_distribution=[1, 3, 1])
     voronoi.organic_tessellate(base_terrain_type=TerrainType.GRASS)
+    voronoi.hard_tessellate(base_terrain_type=TerrainType.GRASS)
     map = voronoi.get_map_with_points()
     snapshots = voronoi.get_map_snapshots()
     curr_snapshot = 0
@@ -64,6 +65,8 @@ def _start_loop():
                 voronoi : VoronoiSimulation = VoronoiSimulation(map)
                 voronoi.add_seeds(base_terrain_type=TerrainType.GRASS, biome_distribution=[1, 3, 1])
                 voronoi.organic_tessellate(base_terrain_type=TerrainType.GRASS)
+                voronoi.hard_tessellate(base_terrain_type=TerrainType.GRASS)
+                voronoi.fill_isles(TerrainType.GRASS, TerrainType.G)
                 map = voronoi.get_map_with_points()
                 snapshots = voronoi.get_map_snapshots()
                 curr_snapshot = 0
